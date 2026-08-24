@@ -3,6 +3,7 @@ import { withTimeout } from './withTimeout'
 
 export async function saveSwapRequests({ teacherName, reason, submitDate, rows }) {
   const records = rows.map((row) => ({
+    type: row.type === 'cover' ? 'cover' : 'swap',
     teacher_name: teacherName,
     reason,
     submit_date: submitDate,
@@ -12,11 +13,15 @@ export async function saveSwapRequests({ teacherName, reason, submitDate, rows }
     from_subject: row.fromSubject,
     from_teacher: row.fromTeacher,
     from_date: row.fromDate,
-    to_day: row.toDay,
-    to_period: row.toPeriod,
-    to_subject: row.toSubject,
-    to_teacher: row.toTeacher,
-    to_date: row.toDate,
+    to_day: row.toDay ?? null,
+    to_period: row.toPeriod ?? null,
+    to_subject: row.toSubject ?? null,
+    to_teacher: row.toTeacher ?? null,
+    to_date: row.toDate ?? null,
+    cover_teacher: row.coverTeacher ?? null,
+    cover_subject: row.coverSubject ?? null,
+    same_subject: row.sameSubject ?? null,
+    cover_plan: row.coverPlan ?? null,
     on_offline: row.onOffline || '오프라인',
   }))
   try {

@@ -49,6 +49,48 @@ export function CandidateList({ origin, candidates, onSelect }) {
   )
 }
 
+export function CoverCandidateList({ origin, candidates, onSelect }) {
+  return (
+    <div className="candidate-box">
+      <h3>
+        공강인 대강 가능 교사 ({origin.day} {origin.period}교시 {origin.cell.subject}·
+        {origin.cell.className})
+      </h3>
+      <p className="hint">동 과목 → 동 교과(군) → 당일 수업 시수가 적은 교사 순으로 정렬했습니다.</p>
+      {candidates.length === 0 ? (
+        <p className="hint">이 시간에 공강인 선생님이 없습니다.</p>
+      ) : (
+        <table className="candidate-table">
+          <thead>
+            <tr>
+              <th>교사</th>
+              <th>담당 교과</th>
+              <th>동과목/동교과</th>
+              <th>당일 수업시수</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {candidates.map((c, idx) => (
+              <tr key={idx}>
+                <td>{c.teacher}</td>
+                <td>{c.ownSubject}</td>
+                <td>{c.sameSubject ? '동과목' : c.sameGroup ? '동교과군' : '-'}</td>
+                <td>{c.dayLoad}</td>
+                <td>
+                  <button className="link-btn" onClick={() => onSelect(c)}>
+                    선택
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
 export function SwapConfirm({ teacherName, origin, candidate, onConfirm, onCancel }) {
   const [fromDate, setFromDate] = useState(() => nextDateForDay(origin.day))
   const [toDate, setToDate] = useState(() => nextDateForDay(candidate.day))
@@ -119,6 +161,81 @@ export function SwapConfirm({ teacherName, origin, candidate, onConfirm, onCance
   )
 }
 
+export function CoverConfirm({ teacherName, origin, candidate, onConfirm, onCancel }) {
+  const [fromDate, setFromDate] = useState(() => nextDateForDay(origin.day))
+  const [onOffline, setOnOffline] = useState('오프라인')
+  const [coverPlan, setCoverPlan] = useState('')
+
+  useEffect(() => setFromDate(nextDateForDay(origin.day)), [origin.day])
+
+  return (
+    <div className="confirm-box">
+      <h3>대강 내용 확인</h3>
+      <table className="confirm-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>학반</th>
+            <th>요일/교시</th>
+            <th>교과</th>
+            <th>교사</th>
+            <th>실제 날짜</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>결강 수업</td>
+            <td>{origin.cell.className}</td>
+            <td>{origin.day} {origin.period}교시</td>
+            <td>{origin.cell.subject}</td>
+            <td>{teacherName}</td>
+            <td>
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </td>
+          </tr>
+          <tr>
+            <td>대강 교사</td>
+            <td>-</td>
+            <td>{origin.day} {origin.period}교시 (동일)</td>
+            <td>{candidate.ownSubject}</td>
+            <td>{candidate.teacher}</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+      {origin.cell.special && (
+        <p className="warn">
+          ⚠ 특수/이동수업으로 표시된 수업입니다. 실제로 대강 처리 가능한 수업인지 다시 한 번 확인해주세요.
+        </p>
+      )}
+      <div className="field-row">
+        <label>
+          온/오프라인
+          <select value={onOffline} onChange={(e) => setOnOffline(e.target.value)}>
+            <option value="오프라인">오프라인</option>
+            <option value="온라인">온라인</option>
+          </select>
+        </label>
+        <label style={{ flex: 1 }}>
+          보강계획
+          <input
+            type="text"
+            value={coverPlan}
+            onChange={(e) => setCoverPlan(e.target.value)}
+            placeholder="예: 자습, 학습지 풀이, 동영상 시청 등"
+          />
+        </label>
+      </div>
+      <div className="actions">
+        <button className="primary" onClick={() => onConfirm({ fromDate, onOffline, coverPlan })}>
+          이 대강 추가
+        </button>
+        <button onClick={onCancel}>취소</button>
+      </div>
+    </div>
+  )
+}
+
 export function PlanPanel({ planInfo, onChange, rows, onRemoveRow, onGenerate }) {
   return (
     <div className="plan-panel">
@@ -156,33 +273,35 @@ export function PlanPanel({ planInfo, onChange, rows, onRemoveRow, onGenerate })
         </label>
       </div>
 
-      <h3>3. 추가된 교체 내역</h3>
+      <h3>3. 추가된 교체/대강 내역</h3>
       {rows.length === 0 ? (
-        <p className="hint">위 시간표에서 결강시킬 수업을 클릭하고, 공강이 맞는 교체 대상을 선택해 추가하세요.</p>
+        <p className="hint">위 시간표에서 결강시킬 수업을 클릭하고, 교체 또는 대강 대상을 선택해 추가하세요.</p>
       ) : (
         <table className="rows-table">
           <thead>
             <tr>
+              <th>구분</th>
               <th>학반</th>
               <th>결강 수업</th>
-              <th>→</th>
-              <th>교체 수업</th>
-              <th>온/오프</th>
+              <th></th>
+              <th>교체/대강 내용</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, idx) => (
               <tr key={idx}>
+                <td>{row.type === 'cover' ? '대강' : '교체'}</td>
                 <td>{row.className}</td>
                 <td>
                   {row.fromDate}({row.fromDay} {row.fromPeriod}교시) {row.fromSubject}/{row.fromTeacher}
                 </td>
                 <td>→</td>
                 <td>
-                  {row.toDate}({row.toDay} {row.toPeriod}교시) {row.toSubject}/{row.toTeacher}
+                  {row.type === 'cover'
+                    ? `${row.coverTeacher} (${row.coverSubject}${row.sameSubject ? ', 동과목' : ''}) - ${row.coverPlan || '보강계획 미입력'}`
+                    : `${row.toDate}(${row.toDay} ${row.toPeriod}교시) ${row.toSubject}/${row.toTeacher}`}
                 </td>
-                <td>{row.onOffline}</td>
                 <td>
                   <button className="link-btn" onClick={() => onRemoveRow(idx)}>
                     삭제

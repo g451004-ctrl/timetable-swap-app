@@ -49,6 +49,30 @@ body {
   font-weight: 600;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.mode-toggle button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccd3db;
+  border-radius: 6px;
+  background: #f5f6f8;
+  cursor: pointer;
+  font-size: 14px;
+  color: #444;
+}
+
+.mode-toggle button.active {
+  background: #3b6fe0;
+  border-color: #3b6fe0;
+  color: #fff;
+  font-weight: 600;
+}
+
 .weekly-log {
   background: #fff;
   border-radius: 10px;

@@ -140,7 +140,10 @@ export function buildSwapDocument({ teacherName, reason, submitDate, rows }) {
     children: headRow2Labels.map((label, i) => cell(label, SWAP_COLS[i], { shaded: true })),
   })
 
-  const dataRows = rows.map((row) => {
+  const swapRows = rows.filter((r) => r.type !== 'cover')
+  const coverRows = rows.filter((r) => r.type === 'cover')
+
+  const dataRows = swapRows.map((row) => {
     const from = formatDate(row.fromDate)
     const to = formatDate(row.toDate)
     const values = [
@@ -179,18 +182,40 @@ export function buildSwapDocument({ teacherName, reason, submitDate, rows }) {
   const coverHeadRow2 = new TableRow({
     children: coverHeadRow2Labels.map((label, i) => cell(label, COVER_COLS[i], { shaded: true })),
   })
-  // the original paper form ships with two blank rows for hand-written entries
-  const coverBlankRows = [0, 1].map(
-    () =>
-      new TableRow({
-        children: COVER_COLS.map((w) => cell('', w)),
-      })
-  )
+  const coverDataRows = coverRows.map((row) => {
+    const from = formatDate(row.fromDate)
+    const values = [
+      shortDate(row.fromDate),
+      from.dow,
+      row.className,
+      String(row.fromPeriod),
+      row.fromSubject,
+      row.fromTeacher,
+      row.coverSubject || row.fromSubject,
+      row.coverTeacher,
+      row.sameSubject ? '예' : '아니오',
+      row.coverPlan || '',
+      row.onOffline || '오프라인',
+    ]
+    return new TableRow({
+      children: values.map((v, i) => cell(v, COVER_COLS[i])),
+    })
+  })
+  // the original paper form ships with two blank rows for hand-written entries when unused
+  const coverBlankRows =
+    coverDataRows.length > 0
+      ? []
+      : [0, 1].map(
+          () =>
+            new TableRow({
+              children: COVER_COLS.map((w) => cell('', w)),
+            })
+        )
 
   const coverTable = new Table({
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
     columnWidths: COVER_COLS,
-    rows: [coverHeadRow1, coverHeadRow2, ...coverBlankRows],
+    rows: [coverHeadRow1, coverHeadRow2, ...coverDataRows, ...coverBlankRows],
   })
 
   const notes = [

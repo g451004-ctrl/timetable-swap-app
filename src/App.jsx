@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import TeacherGrid from './components/TeacherGrid'
-import { CandidateList, SwapConfirm, PlanPanel } from './components/SwapForm'
+import { CandidateList, CoverCandidateList, SwapConfirm, CoverConfirm, PlanPanel } from './components/SwapForm'
 import AdminPanel from './components/AdminPanel'
 import WeeklyLog from './components/WeeklyLog'
 import { findSwapCandidates, sortedTeacherNames } from './lib/swapCandidates'
+import { findCoverCandidates } from './lib/coverCandidates'
 import { generateSwapDocx } from './lib/generateDocx'
 import { saveSwapRequests } from './lib/swapLog'
 import { todayInputDate } from './lib/dateUtils'
@@ -18,6 +19,7 @@ function App() {
   const [tab, setTab] = useState('swap')
   const [selectedTeacher, setSelectedTeacher] = useState('')
   const [origin, setOrigin] = useState(null) // { day, period, cell }
+  const [mode, setMode] = useState('swap') // 'swap' | 'cover'
   const [candidate, setCandidate] = useState(null)
   const [rows, setRows] = useState([])
   const [planInfo, setPlanInfo] = useState({
@@ -41,10 +43,15 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teacherNames])
 
-  const candidates = useMemo(() => {
-    if (!timetable.parsed || !origin || !selectedTeacher) return []
+  const swapCandidates = useMemo(() => {
+    if (!timetable.parsed || !origin || !selectedTeacher || mode !== 'swap') return []
     return findSwapCandidates(timetable.parsed, timetable.classMap, selectedTeacher, origin.day, origin.period)
-  }, [timetable.parsed, timetable.classMap, origin, selectedTeacher])
+  }, [timetable.parsed, timetable.classMap, origin, selectedTeacher, mode])
+
+  const coverCandidates = useMemo(() => {
+    if (!timetable.parsed || !origin || !selectedTeacher || mode !== 'cover') return []
+    return findCoverCandidates(timetable.parsed, selectedTeacher, origin.day, origin.period)
+  }, [timetable.parsed, origin, selectedTeacher, mode])
 
   function handleSelectTeacher(name) {
     setSelectedTeacher(name)
@@ -55,11 +62,18 @@ function App() {
 
   function handlePickOrigin(day, period, cell) {
     setOrigin({ day, period, cell })
+    setMode('swap')
     setCandidate(null)
   }
 
-  function handleConfirmRow(extra) {
+  function handleModeChange(next) {
+    setMode(next)
+    setCandidate(null)
+  }
+
+  function handleConfirmSwapRow(extra) {
     const newRow = {
+      type: 'swap',
       className: origin.cell.className,
       fromDay: origin.day,
       fromPeriod: origin.period,
@@ -69,6 +83,24 @@ function App() {
       toPeriod: candidate.period,
       toSubject: candidate.subject,
       toTeacher: candidate.teacher,
+      ...extra,
+    }
+    setRows((r) => [...r, newRow])
+    setOrigin(null)
+    setCandidate(null)
+  }
+
+  function handleConfirmCoverRow(extra) {
+    const newRow = {
+      type: 'cover',
+      className: origin.cell.className,
+      fromDay: origin.day,
+      fromPeriod: origin.period,
+      fromSubject: origin.cell.subject,
+      fromTeacher: selectedTeacher,
+      coverTeacher: candidate.teacher,
+      coverSubject: candidate.ownSubject,
+      sameSubject: candidate.sameSubject,
       ...extra,
     }
     setRows((r) => [...r, newRow])
@@ -107,8 +139,8 @@ function App() {
       <header className="app-header">
         <h1>수업 교체 &amp; 결보강계획서 자동 작성</h1>
         <p className="subtitle">
-          결강할 선생님의 시간표에서 뺄 수업을 클릭하면, 서로 공강 시간이 맞는 교체 가능한 수업만 찾아
-          보여줍니다.
+          결강할 선생님의 시간표에서 뺄 수업을 클릭한 뒤, 교체(맞교환) 또는 대강(대신 수업) 중 골라 후보를
+          찾아 보여줍니다.
         </p>
         <nav className="tabs">
           <button className={tab === 'swap' ? 'active' : ''} onClick={() => setTab('swap')}>
@@ -164,14 +196,36 @@ function App() {
                 onPick={handlePickOrigin}
               />
               {origin && !candidate && (
-                <CandidateList origin={origin} candidates={candidates} onSelect={setCandidate} />
+                <div className="mode-toggle">
+                  <button className={mode === 'swap' ? 'active' : ''} onClick={() => handleModeChange('swap')}>
+                    수업 교체 (맞교환)
+                  </button>
+                  <button className={mode === 'cover' ? 'active' : ''} onClick={() => handleModeChange('cover')}>
+                    수업 대강 (대신 수업)
+                  </button>
+                </div>
               )}
-              {origin && candidate && (
+              {origin && !candidate && mode === 'swap' && (
+                <CandidateList origin={origin} candidates={swapCandidates} onSelect={setCandidate} />
+              )}
+              {origin && !candidate && mode === 'cover' && (
+                <CoverCandidateList origin={origin} candidates={coverCandidates} onSelect={setCandidate} />
+              )}
+              {origin && candidate && mode === 'swap' && (
                 <SwapConfirm
                   teacherName={selectedTeacher}
                   origin={origin}
                   candidate={candidate}
-                  onConfirm={handleConfirmRow}
+                  onConfirm={handleConfirmSwapRow}
+                  onCancel={() => setCandidate(null)}
+                />
+              )}
+              {origin && candidate && mode === 'cover' && (
+                <CoverConfirm
+                  teacherName={selectedTeacher}
+                  origin={origin}
+                  candidate={candidate}
+                  onConfirm={handleConfirmCoverRow}
                   onCancel={() => setCandidate(null)}
                 />
               )}

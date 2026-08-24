@@ -63,12 +63,13 @@ export default function WeeklyLog() {
         <table className="log-table">
           <thead>
             <tr>
+              <th>구분</th>
               <th>신청 교사</th>
               <th>사유</th>
               <th>학반</th>
               <th>결강 수업</th>
               <th></th>
-              <th>교체 수업</th>
+              <th>교체/대강 내용</th>
               <th>온/오프</th>
               <th></th>
             </tr>
@@ -76,6 +77,7 @@ export default function WeeklyLog() {
           <tbody>
             {swaps.map((s) => (
               <tr key={s.id}>
+                <td>{s.type === 'cover' ? '대강' : '교체'}</td>
                 <td>{s.teacher_name}</td>
                 <td>{s.reason}</td>
                 <td>{s.class_name}</td>
@@ -84,7 +86,9 @@ export default function WeeklyLog() {
                 </td>
                 <td>→</td>
                 <td>
-                  {formatKoreanDate(s.to_date)} {s.to_period}교시 {s.to_subject}/{s.to_teacher}
+                  {s.type === 'cover'
+                    ? `${s.cover_teacher} (${s.cover_subject}${s.same_subject ? ', 동과목' : ''}) - ${s.cover_plan || '보강계획 미입력'}`
+                    : `${formatKoreanDate(s.to_date)} ${s.to_period}교시 ${s.to_subject}/${s.to_teacher}`}
                 </td>
                 <td>{s.on_offline}</td>
                 <td>

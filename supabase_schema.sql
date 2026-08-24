@@ -13,8 +13,10 @@ create table if not exists timetables (
 );
 
 -- 수업 교체(결보강) 내역 - 결보강계획서를 생성할 때마다 한 건씩 저장
+-- type='swap' 인 경우 to_* 컬럼 사용, type='cover' 인 경우 cover_* 컬럼 사용
 create table if not exists swap_requests (
   id            uuid primary key default gen_random_uuid(),
+  type          text not null default 'swap' check (type in ('swap', 'cover')),
   teacher_name  text not null,   -- 결강 교사 (신청자)
   reason        text not null,
   submit_date   date not null,
@@ -24,11 +26,15 @@ create table if not exists swap_requests (
   from_subject  text not null,
   from_teacher  text not null,
   from_date     date not null,
-  to_day        text not null,
-  to_period     integer not null,
-  to_subject    text not null,
-  to_teacher    text not null,
-  to_date       date not null,
+  to_day        text,
+  to_period     integer,
+  to_subject    text,
+  to_teacher    text,
+  to_date       date,
+  cover_teacher text,
+  cover_subject text,
+  same_subject  boolean,
+  cover_plan    text,
   on_offline    text not null default '오프라인',
   created_at    timestamptz default now()
 );
