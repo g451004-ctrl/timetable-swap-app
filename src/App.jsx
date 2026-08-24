@@ -114,9 +114,6 @@ function App() {
           <button className={tab === 'swap' ? 'active' : ''} onClick={() => setTab('swap')}>
             수업 교체
           </button>
-          <button className={tab === 'log' ? 'active' : ''} onClick={() => setTab('log')}>
-            주간 변경 내역
-          </button>
           <button className={tab === 'admin' ? 'active' : ''} onClick={() => setTab('admin')}>
             관리자
           </button>
