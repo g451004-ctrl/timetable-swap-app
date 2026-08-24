@@ -27,6 +27,15 @@ export async function saveSwapRequests({ teacherName, reason, submitDate, rows }
   }
 }
 
+export async function deleteSwapRequest(id) {
+  try {
+    const { error } = await withTimeout(supabase.from('swap_requests').delete().eq('id', id))
+    return { error }
+  } catch (e) {
+    return { error: new Error('삭제하지 못했습니다. Supabase 연결(.env) 설정을 확인해주세요.') }
+  }
+}
+
 export async function fetchSwapsBetween(startDate, endDate) {
   try {
     const { data, error } = await withTimeout(

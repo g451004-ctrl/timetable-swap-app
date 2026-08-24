@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchSwapsBetween } from '../lib/swapLog'
+import { fetchSwapsBetween, deleteSwapRequest } from '../lib/swapLog'
 import { weekRangeContaining, shiftWeek, todayInputDate, formatKoreanDate } from '../lib/dateUtils'
 
 export default function WeeklyLog() {
@@ -7,6 +7,8 @@ export default function WeeklyLog() {
   const [swaps, setSwaps] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [confirmId, setConfirmId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   const { start, end } = weekRangeContaining(anchor)
 
@@ -14,6 +16,7 @@ export default function WeeklyLog() {
     let cancelled = false
     setLoading(true)
     setError('')
+    setConfirmId(null)
     fetchSwapsBetween(start, end).then(({ data, error: err }) => {
       if (cancelled) return
       if (err) setError('불러오지 못했습니다: ' + err.message)
@@ -24,6 +27,18 @@ export default function WeeklyLog() {
       cancelled = true
     }
   }, [start, end])
+
+  async function handleDelete(id) {
+    setDeletingId(id)
+    const { error: err } = await deleteSwapRequest(id)
+    if (err) {
+      setError('삭제하지 못했습니다: ' + err.message)
+    } else {
+      setSwaps((prev) => prev.filter((s) => s.id !== id))
+    }
+    setDeletingId(null)
+    setConfirmId(null)
+  }
 
   return (
     <div className="weekly-log">
@@ -55,6 +70,7 @@ export default function WeeklyLog() {
               <th></th>
               <th>교체 수업</th>
               <th>온/오프</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -71,6 +87,26 @@ export default function WeeklyLog() {
                   {formatKoreanDate(s.to_date)} {s.to_period}교시 {s.to_subject}/{s.to_teacher}
                 </td>
                 <td>{s.on_offline}</td>
+                <td>
+                  {confirmId === s.id ? (
+                    <span className="field-row" style={{ gap: 6 }}>
+                      <button
+                        className="link-btn"
+                        disabled={deletingId === s.id}
+                        onClick={() => handleDelete(s.id)}
+                      >
+                        {deletingId === s.id ? '삭제 중...' : '확정'}
+                      </button>
+                      <button className="link-btn" onClick={() => setConfirmId(null)}>
+                        취소
+                      </button>
+                    </span>
+                  ) : (
+                    <button className="link-btn" onClick={() => setConfirmId(s.id)}>
+                      삭제
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
