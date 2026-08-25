@@ -6,11 +6,17 @@ function teacherByName(parsed, name) {
   return parsed.teachers.find((t) => t.name === name) || null
 }
 
+// 창체(창의적 체험활동)는 특정 교과 수업이 아니라 학급 담임 감독 시간이므로
+// 교사의 수업 시수 계산(대강 후보 정렬, 담당 과목 표시)에서 제외한다.
+function isRealSubjectCell(cell) {
+  return !!cell && !!cell.subject && cell.subject !== '창체'
+}
+
 function subjectCounts(teacher) {
   const counts = new Map()
   for (const day of DAYS) {
     for (const cell of teacher.cells[day]) {
-      if (!cell || !cell.subject) continue
+      if (!isRealSubjectCell(cell)) continue
       counts.set(cell.subject, (counts.get(cell.subject) || 0) + 1)
     }
   }
@@ -18,7 +24,7 @@ function subjectCounts(teacher) {
 }
 
 function dayLoad(teacher, day) {
-  return teacher.cells[day].filter(Boolean).length
+  return teacher.cells[day].filter(isRealSubjectCell).length
 }
 
 // Given a teacher who will be absent at (day, period), list every other teacher
