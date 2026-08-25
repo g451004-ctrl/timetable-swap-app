@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import WeeklyLog from './WeeklyLog'
 
 function AdminLoginForm({ onLogin, loading, error }) {
   const [pw, setPw] = useState('')
@@ -104,6 +105,12 @@ export default function AdminPanel({ auth, timetable }) {
       )}
 
       {timetable.error && <p className="error">{timetable.error}</p>}
+
+      <div style={{ marginTop: 32 }}>
+        <h2>선생님들이 등록한 교체/대강 내역</h2>
+        <p className="hint">주별로 확인하고, 필요하면 취소(삭제)할 수 있습니다.</p>
+        <WeeklyLog />
+      </div>
     </div>
   )
 }
