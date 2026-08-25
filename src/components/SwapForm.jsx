@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { nextDateForDay } from '../lib/dateUtils'
 
-const REASON_OPTIONS = ['출장', '연수', '병가', '조퇴', '경조사', '기타']
+const REASON_OPTIONS = ['출장', '연수', '연가', '병가', '조퇴', '경조사', '기타']
 
 export function CandidateList({ origin, candidates, onSelect }) {
   return (
