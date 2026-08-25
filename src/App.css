@@ -272,6 +272,17 @@ input[type='date'] {
   font-weight: 600;
 }
 
+.changed-orig {
+  font-size: 9px;
+  color: #666;
+}
+
+.print-title {
+  text-align: center;
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
 .swatch.changed {
   background: #e6f7ec;
   border: 1px solid #2f9e5c;
@@ -429,4 +440,67 @@ button:not(.primary):not(.link-btn) {
   border: 1px solid #e2e6eb;
   padding: 6px;
   text-align: left;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-title {
+    font-size: 22px;
+  }
+
+  .class-grid {
+    width: 100%;
+    font-size: 15px;
+  }
+
+  .class-grid th,
+  .class-grid td {
+    height: 60px;
+    padding: 6px 4px;
+  }
+
+  .class-grid .subj {
+    font-size: 16px;
+  }
+
+  .class-grid .teacher {
+    font-size: 13px;
+  }
+
+  .class-grid td.changed {
+    background: none;
+    outline: 2px solid #000;
+  }
+
+  .changed-badge {
+    color: #000;
+  }
+
+  .changed-orig {
+    color: #333;
+  }
 }

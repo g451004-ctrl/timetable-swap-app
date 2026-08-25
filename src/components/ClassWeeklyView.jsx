@@ -43,7 +43,7 @@ export default function ClassWeeklyView({ classMap }) {
 
   return (
     <div className="weekly-log">
-      <div className="week-nav">
+      <div className="week-nav no-print">
         <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
           {classNames.map((cn) => (
             <option key={cn} value={cn}>
@@ -59,6 +59,11 @@ export default function ClassWeeklyView({ classMap }) {
         <button className="link-btn" onClick={() => setAnchor(todayInputDate())}>
           이번 주로
         </button>
+        {grid && (
+          <button className="primary" onClick={() => window.print()}>
+            🖨 인쇄 (게시용)
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -67,59 +72,65 @@ export default function ClassWeeklyView({ classMap }) {
         <p className="error">{error}</p>
       ) : (
         grid && (
-          <div className="grid-wrap">
-            <table className="class-grid">
-              <thead>
-                <tr>
-                  <th></th>
-                  {DAYS.map((d) => (
-                    <th key={d}>{d}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: maxPeriods }).map((_, pIdx) => (
-                  <tr key={pIdx}>
-                    <th>{pIdx + 1}</th>
-                    {DAYS.map((day) => {
-                      if (pIdx >= PERIODS_BY_DAY[day]) return <td key={day} className="empty-slot" />
-                      const cell = grid[day][pIdx]
-                      const cls = ['cell', cell ? '' : 'blank', cell?.changed ? 'changed' : '']
-                        .filter(Boolean)
-                        .join(' ')
-                      return (
-                        <td
-                          key={day}
-                          className={cls}
-                          title={
-                            cell?.changed
-                              ? `원래: ${cell.originalSubject || ''}/${cell.originalTeacher || ''}`
-                              : ''
-                          }
-                        >
-                          {cell ? (
-                            <>
-                              <div className="subj">{cell.subject}</div>
-                              <div className="teacher">{cell.teacher}</div>
-                              {cell.changed && <div className="changed-badge">변경</div>}
-                            </>
-                          ) : (
-                            ''
-                          )}
-                        </td>
-                      )
-                    })}
+          <div className="print-area">
+            <h2 className="print-title">
+              {selectedClass}반 시간표 ({formatKoreanDate(start)} ~ {formatKoreanDate(end)})
+            </h2>
+            <div className="grid-wrap">
+              <table className="class-grid">
+                <thead>
+                  <tr>
+                    <th></th>
+                    {DAYS.map((d) => (
+                      <th key={d}>{d}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="legend">
-              <span className="legend-item">
-                <i className="swatch changed" /> 이번 주 교체/대강으로 바뀐 수업 (마우스 올리면 원래 수업 표시)
-              </span>
+                </thead>
+                <tbody>
+                  {Array.from({ length: maxPeriods }).map((_, pIdx) => (
+                    <tr key={pIdx}>
+                      <th>{pIdx + 1}</th>
+                      {DAYS.map((day) => {
+                        if (pIdx >= PERIODS_BY_DAY[day]) return <td key={day} className="empty-slot" />
+                        const cell = grid[day][pIdx]
+                        const cls = ['cell', cell ? '' : 'blank', cell?.changed ? 'changed' : '']
+                          .filter(Boolean)
+                          .join(' ')
+                        return (
+                          <td key={day} className={cls}>
+                            {cell ? (
+                              <>
+                                <div className="subj">{cell.subject}</div>
+                                <div className="teacher">{cell.teacher}</div>
+                                {cell.changed && (
+                                  <>
+                                    <div className="changed-badge">변경</div>
+                                    <div className="changed-orig">
+                                      (원래 {cell.originalSubject}/{cell.originalTeacher})
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            ) : (
+                              ''
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )
+      )}
+      {grid && (
+        <div className="legend no-print">
+          <span className="legend-item">
+            <i className="swatch changed" /> 이번 주 교체/대강으로 바뀐 수업
+          </span>
+        </div>
       )}
     </div>
   )
