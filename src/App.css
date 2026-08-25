@@ -260,6 +260,23 @@ input[type='date'] {
   background: #ffe9e0;
 }
 
+.class-grid td.changed {
+  background: #e6f7ec;
+  outline: 2px solid #2f9e5c;
+  outline-offset: -2px;
+}
+
+.changed-badge {
+  font-size: 10px;
+  color: #2f9e5c;
+  font-weight: 600;
+}
+
+.swatch.changed {
+  background: #e6f7ec;
+  border: 1px solid #2f9e5c;
+}
+
 .legend {
   display: flex;
   gap: 16px;

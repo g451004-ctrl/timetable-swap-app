@@ -42,6 +42,23 @@ export async function deleteSwapRequest(id) {
   }
 }
 
+export async function fetchClassSwapsForWeek(className, startDate, endDate) {
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('swap_requests')
+        .select('*')
+        .eq('class_name', className)
+        .or(
+          `and(from_date.gte.${startDate},from_date.lte.${endDate}),and(to_date.gte.${startDate},to_date.lte.${endDate})`
+        )
+    )
+    return { data: data || [], error }
+  } catch (e) {
+    return { data: [], error: new Error('불러오지 못했습니다. Supabase 연결(.env) 설정을 확인해주세요.') }
+  }
+}
+
 export async function fetchSwapsBetween(startDate, endDate) {
   try {
     const { data, error } = await withTimeout(

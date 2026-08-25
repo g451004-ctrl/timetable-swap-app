@@ -110,4 +110,13 @@ export function buildClassView(parsed) {
   return classMap
 }
 
+export function sortedClassNames(classMap) {
+  return Object.keys(classMap).sort((a, b) => {
+    const pa = a.split('-').map(Number)
+    const pb = b.split('-').map(Number)
+    if (pa[0] !== pb[0]) return (pa[0] || 0) - (pb[0] || 0)
+    return (pa[1] || 0) - (pb[1] || 0)
+  })
+}
+
 export { DAYS, PERIODS_BY_DAY }

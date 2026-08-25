@@ -3,6 +3,7 @@ import TeacherGrid from './components/TeacherGrid'
 import { CandidateList, CoverCandidateList, SwapConfirm, CoverConfirm, PlanPanel } from './components/SwapForm'
 import AdminPanel from './components/AdminPanel'
 import WeeklyLog from './components/WeeklyLog'
+import ClassWeeklyView from './components/ClassWeeklyView'
 import { findSwapCandidates, sortedTeacherNames } from './lib/swapCandidates'
 import { findCoverCandidates } from './lib/coverCandidates'
 import { generateSwapDocx } from './lib/generateDocx'
@@ -147,6 +148,9 @@ function App() {
           <button className={tab === 'swap' ? 'active' : ''} onClick={() => setTab('swap')}>
             수업 교체
           </button>
+          <button className={tab === 'classWeek' ? 'active' : ''} onClick={() => setTab('classWeek')}>
+            학급별 주간 시간표
+          </button>
           <button className={tab === 'admin' ? 'active' : ''} onClick={() => setTab('admin')}>
             관리자
           </button>
@@ -156,6 +160,13 @@ function App() {
       {tab === 'admin' && <AdminPanel auth={auth} timetable={timetable} />}
 
       {tab === 'log' && <WeeklyLog />}
+
+      {tab === 'classWeek' &&
+        (timetable.parsed ? (
+          <ClassWeeklyView classMap={timetable.classMap} />
+        ) : (
+          <p className="hint">시간표를 먼저 등록해주세요.</p>
+        ))}
 
       {tab === 'swap' &&
         (timetable.loading ? (
