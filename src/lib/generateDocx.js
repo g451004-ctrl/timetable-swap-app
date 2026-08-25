@@ -193,7 +193,7 @@ export function buildSwapDocument({ teacherName, reason, submitDate, rows }) {
       row.fromTeacher,
       row.coverSubject || row.fromSubject,
       row.coverTeacher,
-      row.sameSubject ? '예' : '아니오',
+      row.sameGroup ? 'O' : 'X',
       row.coverPlan || '',
       row.onOffline || '오프라인',
     ]

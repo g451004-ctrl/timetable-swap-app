@@ -1,6 +1,6 @@
 import { DAYS } from './parseTimetable'
 import { isTeacherFree } from './swapCandidates'
-import { subjectGroup } from './subjectGroups'
+import { teacherGroup } from './teacherGroups'
 
 function teacherByName(parsed, name) {
   return parsed.teachers.find((t) => t.name === name) || null
@@ -23,7 +23,8 @@ function dayLoad(teacher, day) {
 
 // Given a teacher who will be absent at (day, period), list every other teacher
 // free at that same slot as a 보강(cover) candidate, ranked 동 과목 > 동 교과(군) >
-// 당일 수업 시수가 적은 교사 순.
+// 당일 수업 시수가 적은 교사 순. 교과(군) is looked up from the school's teacher
+// roster (교과군.xlsx), not guessed from subject text.
 export function findCoverCandidates(parsed, teacherName, day, period) {
   const teacher = teacherByName(parsed, teacherName)
   if (!teacher) return []
@@ -31,7 +32,7 @@ export function findCoverCandidates(parsed, teacherName, day, period) {
   if (!originCell) return []
 
   const originSubject = originCell.subject
-  const originGroup = subjectGroup(originSubject)
+  const originGroup = teacherGroup(teacherName)
 
   const candidates = []
   for (const t of parsed.teachers) {
@@ -41,14 +42,12 @@ export function findCoverCandidates(parsed, teacherName, day, period) {
     const counts = subjectCounts(t)
     const subjects = [...counts.keys()]
     const sameSubject = counts.has(originSubject)
-    const sameGroup = subjects.some((s) => subjectGroup(s) === originGroup)
+    const candidateGroup = teacherGroup(t.name)
+    const sameGroup = !!originGroup && candidateGroup === originGroup
 
-    let ownSubject = originSubject
-    if (!sameSubject) {
-      const groupSubjects = subjects.filter((s) => subjectGroup(s) === originGroup)
-      const pool = groupSubjects.length ? groupSubjects : subjects
-      ownSubject = pool.sort((a, b) => (counts.get(b) || 0) - (counts.get(a) || 0))[0] || ''
-    }
+    const ownSubject = sameSubject
+      ? originSubject
+      : subjects.sort((a, b) => (counts.get(b) || 0) - (counts.get(a) || 0))[0] || ''
 
     candidates.push({
       teacher: t.name,
@@ -57,6 +56,7 @@ export function findCoverCandidates(parsed, teacherName, day, period) {
       ownSubject,
       sameSubject,
       sameGroup,
+      teacherGroup: candidateGroup,
       dayLoad: dayLoad(t, day),
     })
   }

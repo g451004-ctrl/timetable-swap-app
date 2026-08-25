@@ -101,6 +101,7 @@ function App() {
       coverTeacher: candidate.teacher,
       coverSubject: candidate.ownSubject,
       sameSubject: candidate.sameSubject,
+      sameGroup: candidate.sameGroup,
       ...extra,
     }
     setRows((r) => [...r, newRow])

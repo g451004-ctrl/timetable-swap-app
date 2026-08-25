@@ -21,6 +21,7 @@ export async function saveSwapRequests({ teacherName, reason, submitDate, rows }
     cover_teacher: row.coverTeacher ?? null,
     cover_subject: row.coverSubject ?? null,
     same_subject: row.sameSubject ?? null,
+    same_group: row.sameGroup ?? null,
     cover_plan: row.coverPlan ?? null,
     on_offline: row.onOffline || '오프라인',
   }))
