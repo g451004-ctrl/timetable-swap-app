@@ -100,7 +100,7 @@ function App() {
       fromSubject: origin.cell.subject,
       fromTeacher: selectedTeacher,
       coverTeacher: candidate.teacher,
-      coverSubject: candidate.ownSubject,
+      coverSubject: origin.cell.subject, // 대강은 결강 수업과 같은 교과로 표기 (교체와 달리 실제 수업 내용은 바뀌지 않음)
       sameSubject: candidate.sameSubject,
       sameGroup: candidate.sameGroup,
       ...extra,

@@ -197,7 +197,7 @@ export function CoverConfirm({ teacherName, origin, candidate, onConfirm, onCanc
             <td>대강 교사</td>
             <td>-</td>
             <td>{origin.day} {origin.period}교시 (동일)</td>
-            <td>{candidate.ownSubject}</td>
+            <td>{origin.cell.subject}</td>
             <td>{candidate.teacher}</td>
             <td>-</td>
           </tr>
