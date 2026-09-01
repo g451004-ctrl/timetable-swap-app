@@ -79,8 +79,23 @@ function shortDate(dateStr) {
   return `${dt.getMonth() + 1}/${dt.getDate()}`
 }
 
-export function buildSwapDocument({ teacherName, reason, submitDate, rows }) {
-  const sub = formatDate(submitDate)
+// 결강 날짜(들)를 표시. 하루면 "YYYY년 M월 D일 요일요일", 여러 날이면
+// 그 날짜들을 모두 나열한다 (예: 하루짜리 출장이 아니라 이틀 이상 결강하는 경우).
+function formatAbsenceDates(dateStrs) {
+  const uniqueSorted = [...new Set(dateStrs.filter(Boolean))].sort()
+  if (uniqueSorted.length === 0) return ''
+  const parsed = uniqueSorted.map(formatDate)
+  if (parsed.length === 1) {
+    const d = parsed[0]
+    return `${d.y}년   ${d.m}월   ${d.d}일   ${d.dow}요일`
+  }
+  const year = parsed[0].y
+  const list = parsed.map((d) => `${d.m}월 ${d.d}일(${d.dow})`).join(',  ')
+  return `${year}년   ${list}`
+}
+
+export function buildSwapDocument({ teacherName, reason, rows }) {
+  const absenceDateText = formatAbsenceDates(rows.map((r) => r.fromDate))
 
   const title = new Paragraph({
     alignment: AlignmentType.CENTER,
@@ -108,7 +123,7 @@ export function buildSwapDocument({ teacherName, reason, submitDate, rows }) {
       new TableRow({
         children: [
           cell('일      시:', HEADER_COLS[0]),
-          cell(`${sub.y}년   ${sub.m}월   ${sub.d}일   ${sub.dow}요일`, HEADER_COLS[1] + HEADER_COLS[2], {
+          cell(absenceDateText, HEADER_COLS[1] + HEADER_COLS[2], {
             colSpan: 2,
             align: AlignmentType.LEFT,
           }),
@@ -258,6 +273,6 @@ export async function generateSwapDocx(data) {
   const { saveAs } = await import('file-saver')
   const doc = buildSwapDocument(data)
   const blob = await Packer.toBlob(doc)
-  const fname = `결보강계획서_${data.teacherName}_${data.submitDate || ''}.docx`
+  const fname = `결보강계획서_${data.teacherName}_${data.rows?.[0]?.fromDate || ''}.docx`
   saveAs(blob, fname)
 }

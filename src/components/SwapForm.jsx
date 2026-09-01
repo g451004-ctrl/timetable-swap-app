@@ -263,15 +263,12 @@ export function PlanPanel({ planInfo, onChange, rows, onRemoveRow, onGenerate })
             ))}
           </select>
         </label>
-        <label>
-          신청일
-          <input
-            type="date"
-            value={planInfo.submitDate}
-            onChange={(e) => onChange({ ...planInfo, submitDate: e.target.value })}
-          />
-        </label>
       </div>
+      {rows.length > 0 && (
+        <p className="hint">
+          결보강계획서에 표시될 결강 일시: <strong>{[...new Set(rows.map((r) => r.fromDate))].sort().join(', ')}</strong>
+        </p>
+      )}
 
       <h3>3. 추가된 교체/대강 내역</h3>
       {rows.length === 0 ? (
