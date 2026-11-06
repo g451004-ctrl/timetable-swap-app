@@ -59,6 +59,24 @@ export async function fetchClassSwapsForWeek(className, startDate, endDate) {
   }
 }
 
+// 결강일 또는 교체일이 기간 안에 있는 모든 내역 (교사 시간표에 반영하기 위해 학급 구분 없이 가져옴)
+export async function fetchSwapsInRange(startDate, endDate) {
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('swap_requests')
+        .select('*')
+        .or(
+          `and(from_date.gte.${startDate},from_date.lte.${endDate}),and(to_date.gte.${startDate},to_date.lte.${endDate})`
+        )
+        .order('created_at', { ascending: true })
+    )
+    return { data: data || [], error }
+  } catch (e) {
+    return { data: [], error: new Error('불러오지 못했습니다. Supabase 연결(.env) 설정을 확인해주세요.') }
+  }
+}
+
 export async function fetchSwapsBetween(startDate, endDate) {
   try {
     const { data, error } = await withTimeout(

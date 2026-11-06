@@ -38,6 +38,16 @@ export function shiftWeek(dateStr, weeks) {
   return toInputDate(d)
 }
 
+// 주어진 날짜들이 걸쳐 있는 주를 구한다. { anchor: 첫 주 월요일, weeks: 걸친 주 수(최대 3) }
+export function weekSpan(dateStrs) {
+  const sorted = dateStrs.filter(Boolean).sort()
+  if (sorted.length === 0) return { anchor: todayInputDate(), weeks: 1 }
+  const first = weekRangeContaining(sorted[0]).start
+  const last = weekRangeContaining(sorted[sorted.length - 1]).start
+  const diff = Math.round((new Date(last + 'T00:00:00') - new Date(first + 'T00:00:00')) / (7 * 86400000))
+  return { anchor: first, weeks: Math.min(3, diff + 1) }
+}
+
 export function formatKoreanDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr + 'T00:00:00')

@@ -5,11 +5,12 @@ import { CandidateList, CoverCandidateList, SwapConfirm, CoverConfirm, PlanPanel
 import AdminPanel from './components/AdminPanel'
 import WeeklyLog from './components/WeeklyLog'
 import ClassWeeklyView from './components/ClassWeeklyView'
+import TeacherWeeklyView from './components/TeacherWeeklyView'
 import { findSwapCandidates, sortedTeacherNames } from './lib/swapCandidates'
 import { findCoverCandidates } from './lib/coverCandidates'
 import { generateSwapDocx } from './lib/generateDocx'
 import { saveSwapRequests } from './lib/swapLog'
-import { todayInputDate } from './lib/dateUtils'
+import { todayInputDate, weekSpan } from './lib/dateUtils'
 import { useTimetable } from './hooks/useTimetable'
 import { useAdminAuth } from './hooks/useAdminAuth'
 import './App.css'
@@ -31,6 +32,8 @@ function App() {
     submitDate: todayInputDate(),
   })
   const [saveStatus, setSaveStatus] = useState('')
+  const [printTargets, setPrintTargets] = useState(null) // { teachers, anchor, weeks } 방금 만든 계획서에 관련된 선생님들
+  const [teacherPreset, setTeacherPreset] = useState(null) // 선생님별 시간표 탭을 열 때의 초기값
 
   const teacherNames = useMemo(
     () => (timetable.parsed ? sortedTeacherNames(timetable.parsed) : []),
@@ -123,8 +126,21 @@ function App() {
     setRows((r) => r.filter((_, i) => i !== idx))
   }
 
+  function openTeacherPrint(teacher) {
+    setTeacherPreset({ teacher, anchor: printTargets.anchor, weeks: printTargets.weeks, key: Date.now() })
+    setTab('teacherWeek')
+  }
+
   async function handleGenerate() {
     setSaveStatus('저장 중...')
+    setPrintTargets(null)
+    // 계획서를 만든 뒤 rows가 비워지므로, 관련 선생님과 날짜를 미리 계산해 둔다
+    const involvedTeachers = [
+      ...new Set(
+        rows.flatMap((r) => [r.fromTeacher, r.type === 'cover' ? r.coverTeacher : r.toTeacher]).filter(Boolean)
+      ),
+    ]
+    const span = weekSpan(rows.flatMap((r) => [r.fromDate, r.type === 'cover' ? null : r.toDate]))
     await generateSwapDocx({
       teacherName: planInfo.teacherName,
       reason: planInfo.reason,
@@ -141,6 +157,7 @@ function App() {
       setSaveStatus('문서는 다운로드되었지만 공유 내역 저장에는 실패했습니다: ' + error.message)
     } else {
       setSaveStatus('문서를 다운로드했고, 주간 변경 내역에도 저장했습니다.')
+      setPrintTargets({ teachers: involvedTeachers, ...span })
       setRows([])
     }
   }
@@ -160,6 +177,15 @@ function App() {
           <button className={tab === 'classWeek' ? 'active' : ''} onClick={() => setTab('classWeek')}>
             학급별 주간 시간표
           </button>
+          <button
+            className={tab === 'teacherWeek' ? 'active' : ''}
+            onClick={() => {
+              setTeacherPreset(null)
+              setTab('teacherWeek')
+            }}
+          >
+            선생님별 주간 시간표
+          </button>
           <button className={tab === 'admin' ? 'active' : ''} onClick={() => setTab('admin')}>
             관리자
           </button>
@@ -173,6 +199,17 @@ function App() {
       {tab === 'classWeek' &&
         (timetable.parsed ? (
           <ClassWeeklyView classMap={timetable.classMap} />
+        ) : (
+          <p className="hint">시간표를 먼저 등록해주세요.</p>
+        ))}
+
+      {tab === 'teacherWeek' &&
+        (timetable.parsed ? (
+          <TeacherWeeklyView
+            key={teacherPreset?.key ?? 'default'}
+            parsed={timetable.parsed}
+            preset={teacherPreset}
+          />
         ) : (
           <p className="hint">시간표를 먼저 등록해주세요.</p>
         ))}
@@ -273,6 +310,20 @@ function App() {
                   onGenerate={handleGenerate}
                 />
                 {saveStatus && <p className="hint">{saveStatus}</p>}
+                {printTargets && (
+                  <div className="print-targets">
+                    <p className="hint">
+                      교체 후 시간표 인쇄 ({printTargets.weeks}주, A4 한 장) — 선생님을 선택하세요
+                    </p>
+                    <div className="actions">
+                      {printTargets.teachers.map((t) => (
+                        <button key={t} onClick={() => openTeacherPrint(t)}>
+                          🖨 {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               {previewTarget && (
                 <CandidateSchedulePreview
