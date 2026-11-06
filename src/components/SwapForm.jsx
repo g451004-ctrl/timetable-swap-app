@@ -3,13 +3,18 @@ import { nextDateForDay } from '../lib/dateUtils'
 
 const REASON_OPTIONS = ['출장', '연수', '연가', '병가', '조퇴', '경조사', '기타']
 
-export function CandidateList({ origin, candidates, onSelect }) {
+function isSameCandidate(a, b) {
+  return !!a && !!b && a.teacher === b.teacher && a.day === b.day && a.period === b.period
+}
+
+export function CandidateList({ origin, candidates, onSelect, onPreview, activeCandidate }) {
   return (
     <div className="candidate-box">
       <h3>
         공강 시간이 맞는 교체 가능 수업 ({origin.day} {origin.period}교시 {origin.cell.subject}·
         {origin.cell.className})
       </h3>
+      <p className="hint">행에 마우스를 올리거나 클릭하면 오른쪽 아래에서 그 선생님의 교체 후 시간표를 볼 수 있어요.</p>
       {candidates.length === 0 ? (
         <p className="hint">
           이 수업과 서로 공강 시간이 맞는 교체 대상이 없습니다. 다른 수업을 선택하거나 대강(대신 수업)을
@@ -29,7 +34,14 @@ export function CandidateList({ origin, candidates, onSelect }) {
           </thead>
           <tbody>
             {candidates.map((c, idx) => (
-              <tr key={idx} className={c.special ? 'row-special' : ''}>
+              <tr
+                key={idx}
+                className={['clickable-row', c.special ? 'row-special' : '', isSameCandidate(c, activeCandidate) ? 'row-active' : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                onMouseEnter={() => onPreview?.(c)}
+                onClick={() => onPreview?.(c)}
+              >
                 <td>{c.className}</td>
                 <td>{c.day}</td>
                 <td>{c.period}교시</td>
@@ -49,7 +61,7 @@ export function CandidateList({ origin, candidates, onSelect }) {
   )
 }
 
-export function CoverCandidateList({ origin, candidates, onSelect }) {
+export function CoverCandidateList({ origin, candidates, onSelect, onPreview, activeCandidate }) {
   return (
     <div className="candidate-box">
       <h3>
@@ -57,6 +69,7 @@ export function CoverCandidateList({ origin, candidates, onSelect }) {
         {origin.cell.className})
       </h3>
       <p className="hint">동 과목 → 동 교과(군) → 당일 수업 시수가 적은 교사 순으로 정렬했습니다.</p>
+      <p className="hint">행에 마우스를 올리거나 클릭하면 오른쪽 아래에서 그 선생님의 대강 후 시간표를 볼 수 있어요.</p>
       {candidates.length === 0 ? (
         <p className="hint">이 시간에 공강인 선생님이 없습니다.</p>
       ) : (
@@ -72,7 +85,12 @@ export function CoverCandidateList({ origin, candidates, onSelect }) {
           </thead>
           <tbody>
             {candidates.map((c, idx) => (
-              <tr key={idx}>
+              <tr
+                key={idx}
+                className={['clickable-row', isSameCandidate(c, activeCandidate) ? 'row-active' : ''].filter(Boolean).join(' ')}
+                onMouseEnter={() => onPreview?.(c)}
+                onClick={() => onPreview?.(c)}
+              >
                 <td>{c.teacher}</td>
                 <td>{c.ownSubject}</td>
                 <td>{c.sameSubject ? '동과목' : c.sameGroup ? '동교과군' : '-'}</td>

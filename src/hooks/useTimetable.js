@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { parseTimetableFile, buildClassView } from '../lib/parseTimetable'
 import { withTimeout } from '../lib/withTimeout'
@@ -80,7 +80,7 @@ export function useTimetable() {
     }
   }, [])
 
-  const classMap = parsed ? buildClassView(parsed) : null
+  const classMap = useMemo(() => (parsed ? buildClassView(parsed) : null), [parsed])
 
   return { parsed, classMap, meta, loading, error, uploading, uploadTimetable, deleteTimetable, refetch: fetchTimetable }
 }

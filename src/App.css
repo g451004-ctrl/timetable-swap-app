@@ -163,6 +163,96 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+/* 오른쪽 열: 계획서 정보 카드 + (후보를 고를 때) 후보 선생님 시간표 미리보기 카드 */
+.right-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-self: stretch;
+}
+
+.sticky-preview {
+  position: sticky;
+  top: 12px;
+}
+
+.preview-card h3 {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.preview-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: #666;
+}
+
+.preview-grid th,
+.preview-grid td {
+  min-width: 46px;
+  height: 36px;
+  padding: 2px;
+}
+
+.preview-grid .subj {
+  font-size: 11px;
+}
+
+.preview-grid .teacher {
+  font-size: 10px;
+}
+
+.class-grid td.incoming {
+  background: #e4ecff;
+  outline: 2px solid #3b6fe0;
+  outline-offset: -2px;
+}
+
+.class-grid td.outgoing {
+  background: #fff1ee;
+  color: #a33;
+  text-decoration: line-through;
+}
+
+.preview-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.swatch.incoming {
+  background: #e4ecff;
+  border: 1px solid #3b6fe0;
+}
+
+.swatch.outgoing {
+  background: #fff1ee;
+  border: 1px solid #d98;
+}
+
+.run-note {
+  font-size: 12px;
+  margin: 8px 0 0;
+  color: #2f7d4f;
+}
+
+.run-note.warn {
+  color: #a15c00;
+  background: #fff3cd;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.candidate-table tr.clickable-row {
+  cursor: pointer;
+}
+
+.candidate-table tr.clickable-row:hover,
+.candidate-table tr.row-active {
+  background: #eef4ff;
+}
+
 .class-select-row {
   display: flex;
   align-items: center;

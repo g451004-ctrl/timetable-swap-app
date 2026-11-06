@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import TeacherGrid from './components/TeacherGrid'
+import CandidateSchedulePreview from './components/CandidateSchedulePreview'
 import { CandidateList, CoverCandidateList, SwapConfirm, CoverConfirm, PlanPanel } from './components/SwapForm'
 import AdminPanel from './components/AdminPanel'
 import WeeklyLog from './components/WeeklyLog'
@@ -22,6 +23,7 @@ function App() {
   const [origin, setOrigin] = useState(null) // { day, period, cell }
   const [mode, setMode] = useState('swap') // 'swap' | 'cover'
   const [candidate, setCandidate] = useState(null)
+  const [previewCandidate, setPreviewCandidate] = useState(null) // 목록에서 마우스를 올리거나 클릭해 미리보는 후보
   const [rows, setRows] = useState([])
   const [planInfo, setPlanInfo] = useState({
     teacherName: '',
@@ -54,10 +56,13 @@ function App() {
     return findCoverCandidates(timetable.parsed, selectedTeacher, origin.day, origin.period)
   }, [timetable.parsed, origin, selectedTeacher, mode])
 
+  const previewTarget = origin ? candidate || previewCandidate : null
+
   function handleSelectTeacher(name) {
     setSelectedTeacher(name)
     setOrigin(null)
     setCandidate(null)
+    setPreviewCandidate(null)
     setPlanInfo((p) => ({ ...p, teacherName: name }))
   }
 
@@ -65,11 +70,13 @@ function App() {
     setOrigin({ day, period, cell })
     setMode('swap')
     setCandidate(null)
+    setPreviewCandidate(null)
   }
 
   function handleModeChange(next) {
     setMode(next)
     setCandidate(null)
+    setPreviewCandidate(null)
   }
 
   function handleConfirmSwapRow(extra) {
@@ -89,6 +96,7 @@ function App() {
     setRows((r) => [...r, newRow])
     setOrigin(null)
     setCandidate(null)
+    setPreviewCandidate(null)
   }
 
   function handleConfirmCoverRow(extra) {
@@ -108,6 +116,7 @@ function App() {
     setRows((r) => [...r, newRow])
     setOrigin(null)
     setCandidate(null)
+    setPreviewCandidate(null)
   }
 
   function handleRemoveRow(idx) {
@@ -218,10 +227,22 @@ function App() {
                 </div>
               )}
               {origin && !candidate && mode === 'swap' && (
-                <CandidateList origin={origin} candidates={swapCandidates} onSelect={setCandidate} />
+                <CandidateList
+                  origin={origin}
+                  candidates={swapCandidates}
+                  onSelect={setCandidate}
+                  onPreview={setPreviewCandidate}
+                  activeCandidate={previewCandidate}
+                />
               )}
               {origin && !candidate && mode === 'cover' && (
-                <CoverCandidateList origin={origin} candidates={coverCandidates} onSelect={setCandidate} />
+                <CoverCandidateList
+                  origin={origin}
+                  candidates={coverCandidates}
+                  onSelect={setCandidate}
+                  onPreview={setPreviewCandidate}
+                  activeCandidate={previewCandidate}
+                />
               )}
               {origin && candidate && mode === 'swap' && (
                 <SwapConfirm
@@ -242,15 +263,25 @@ function App() {
                 />
               )}
             </div>
-            <div className="right-col">
-              <PlanPanel
-                planInfo={planInfo}
-                onChange={setPlanInfo}
-                rows={rows}
-                onRemoveRow={handleRemoveRow}
-                onGenerate={handleGenerate}
-              />
-              {saveStatus && <p className="hint">{saveStatus}</p>}
+            <div className="right-stack">
+              <div className="right-col">
+                <PlanPanel
+                  planInfo={planInfo}
+                  onChange={setPlanInfo}
+                  rows={rows}
+                  onRemoveRow={handleRemoveRow}
+                  onGenerate={handleGenerate}
+                />
+                {saveStatus && <p className="hint">{saveStatus}</p>}
+              </div>
+              {previewTarget && (
+                <CandidateSchedulePreview
+                  parsed={timetable.parsed}
+                  mode={mode}
+                  origin={origin}
+                  target={previewTarget}
+                />
+              )}
             </div>
           </div>
         ))}
