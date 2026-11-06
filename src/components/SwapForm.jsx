@@ -154,6 +154,9 @@ export function SwapConfirm({ teacherName, origin, candidate, onConfirm, onCance
           </tr>
         </tbody>
       </table>
+      {candidate.forced && (
+        <p className="warn">⚠ 직접 입력한 교체입니다. 공강 시간 등은 직접 확인해주세요.</p>
+      )}
       {(origin.cell.special || candidate.special) && (
         <p className="warn">
           ⚠ 선택한 수업 중 특수/이동수업으로 표시된 수업이 있습니다. 실제로 교체 가능한 수업인지 다시 한
@@ -221,6 +224,9 @@ export function CoverConfirm({ teacherName, origin, candidate, onConfirm, onCanc
           </tr>
         </tbody>
       </table>
+      {candidate.forced && (
+        <p className="warn">⚠ 직접 입력한 대강입니다. 공강 시간 등은 직접 확인해주세요.</p>
+      )}
       {origin.cell.special && (
         <p className="warn">
           ⚠ 특수/이동수업으로 표시된 수업입니다. 실제로 대강 처리 가능한 수업인지 다시 한 번 확인해주세요.

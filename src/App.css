@@ -230,6 +230,29 @@ body {
   border: 1px solid #d98;
 }
 
+.forced-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px dashed #b7c0cc;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.forced-box summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3b6fe0;
+}
+
+.forced-box .field-row {
+  margin-top: 8px;
+}
+
+.forced-box input[type='text'] {
+  width: 140px;
+}
+
 .inline-label {
   display: inline-flex;
   align-items: center;

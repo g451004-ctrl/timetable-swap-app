@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import TeacherGrid from './components/TeacherGrid'
 import CandidateSchedulePreview from './components/CandidateSchedulePreview'
+import ForcedEntry from './components/ForcedEntry'
 import { CandidateList, CoverCandidateList, SwapConfirm, CoverConfirm, PlanPanel } from './components/SwapForm'
 import AdminPanel from './components/AdminPanel'
 import WeeklyLog from './components/WeeklyLog'
@@ -279,6 +280,16 @@ function App() {
                   onSelect={setCandidate}
                   onPreview={setPreviewCandidate}
                   activeCandidate={previewCandidate}
+                />
+              )}
+              {origin && !candidate && (
+                <ForcedEntry
+                  key={`${mode}-${selectedTeacher}-${origin.day}-${origin.period}`}
+                  mode={mode}
+                  origin={origin}
+                  absentTeacher={selectedTeacher}
+                  parsed={timetable.parsed}
+                  onSubmit={setCandidate}
                 />
               )}
               {origin && candidate && mode === 'swap' && (
