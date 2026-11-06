@@ -731,4 +731,16 @@ button:not(.primary):not(.link-btn) {
   .changed-orig {
     color: #333;
   }
+
+  /* 여러 주 인쇄 시 바뀐 칸이 길어져 A4를 넘지 않도록 '변경' 글자는 빼고(테두리로 구분) 원래 수업만 작게 */
+  .print-area.weeks-2 .changed-badge,
+  .print-area.weeks-3 .changed-badge {
+    display: none;
+  }
+
+  .print-area.weeks-2 .changed-orig,
+  .print-area.weeks-3 .changed-orig {
+    font-size: 8px;
+    line-height: 1.2;
+  }
 }
