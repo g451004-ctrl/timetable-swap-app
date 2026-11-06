@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DAYS, PERIODS_BY_DAY } from '../lib/parseTimetable'
+import { PERIODS_BY_DAY } from '../lib/parseTimetable'
 import { sortedTeacherNames } from '../lib/swapCandidates'
 import { buildEffectiveTeacherWeek } from '../lib/teacherWeekView'
+import { getDayOverrides } from '../lib/dayOverrides'
 import { fetchSwapsInRange } from '../lib/swapLog'
 import { weekRangeContaining, shiftWeek, todayInputDate, formatKoreanDate } from '../lib/dateUtils'
+import { ColumnHeader } from './ClassWeeklyView'
 
-// 선생님별 주간 시간표 (교체/대강 반영). 최대 3주를 A4 한 장에 모아서 인쇄할 수 있다.
+// 선생님별 주간 시간표 (요일 변경, 교체/대강 반영). 최대 3주를 A4 한 장에 모아서 인쇄할 수 있다.
 export default function TeacherWeeklyView({ parsed, preset }) {
+  const overrides = getDayOverrides(parsed)
   const teacherNames = useMemo(() => sortedTeacherNames(parsed), [parsed])
   const [teacher, setTeacher] = useState(preset?.teacher || teacherNames[0] || '')
   const [anchor, setAnchor] = useState(preset?.anchor || todayInputDate())
@@ -41,8 +44,8 @@ export default function TeacherWeeklyView({ parsed, preset }) {
 
   const weekGrids = useMemo(() => {
     if (!teacherObj) return []
-    return ranges.map((r) => ({ ...r, ...buildEffectiveTeacherWeek(teacherObj, swaps, r.start, r.end) }))
-  }, [teacherObj, swaps, ranges])
+    return ranges.map((r) => ({ ...r, ...buildEffectiveTeacherWeek(teacherObj, swaps, r.start, overrides) }))
+  }, [teacherObj, swaps, ranges, overrides])
 
   const maxPeriods = Math.max(...Object.values(PERIODS_BY_DAY))
   const totalChanged = weekGrids.reduce((sum, w) => sum + w.changed, 0)
@@ -103,8 +106,8 @@ export default function TeacherWeeklyView({ parsed, preset }) {
                       <thead>
                         <tr>
                           <th></th>
-                          {DAYS.map((d) => (
-                            <th key={d}>{d}</th>
+                          {w.columns.map((col) => (
+                            <ColumnHeader key={col.day} col={col} />
                           ))}
                         </tr>
                       </thead>
@@ -112,12 +115,12 @@ export default function TeacherWeeklyView({ parsed, preset }) {
                         {Array.from({ length: maxPeriods }).map((_, pIdx) => (
                           <tr key={pIdx}>
                             <th>{pIdx + 1}</th>
-                            {DAYS.map((day) => {
-                              if (pIdx >= PERIODS_BY_DAY[day]) return <td key={day} className="empty-slot" />
-                              const cell = w.grid[day][pIdx]
+                            {w.columns.map((col) => {
+                              if (pIdx >= col.periods) return <td key={col.day} className="empty-slot" />
+                              const cell = w.grid[col.day][pIdx]
                               const cls = ['cell', cell ? '' : 'blank', cell?.kind || ''].filter(Boolean).join(' ')
                               return (
-                                <td key={day} className={cls}>
+                                <td key={col.day} className={cls}>
                                   {cell ? (
                                     <>
                                       <div className="subj">{cell.subject}</div>

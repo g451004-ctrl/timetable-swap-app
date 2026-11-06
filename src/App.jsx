@@ -11,7 +11,8 @@ import { findSwapCandidates, sortedTeacherNames } from './lib/swapCandidates'
 import { findCoverCandidates } from './lib/coverCandidates'
 import { generateSwapDocx } from './lib/generateDocx'
 import { saveSwapRequests } from './lib/swapLog'
-import { todayInputDate, weekSpan } from './lib/dateUtils'
+import { formatKoreanDate, todayInputDate, weekSpan } from './lib/dateUtils'
+import { getDayOverrides, upcomingOverrides } from './lib/dayOverrides'
 import { useTimetable } from './hooks/useTimetable'
 import { useAdminAuth } from './hooks/useAdminAuth'
 import './App.css'
@@ -35,6 +36,9 @@ function App() {
   const [saveStatus, setSaveStatus] = useState('')
   const [printTargets, setPrintTargets] = useState(null) // { teachers, anchor, weeks } 방금 만든 계획서에 관련된 선생님들
   const [teacherPreset, setTeacherPreset] = useState(null) // 선생님별 시간표 탭을 열 때의 초기값
+
+  const dayOverrides = getDayOverrides(timetable.parsed)
+  const upcoming = useMemo(() => upcomingOverrides(dayOverrides, todayInputDate()), [dayOverrides])
 
   const teacherNames = useMemo(
     () => (timetable.parsed ? sortedTeacherNames(timetable.parsed) : []),
@@ -193,13 +197,24 @@ function App() {
         </nav>
       </header>
 
+      {upcoming.length > 0 && tab !== 'admin' && (
+        <div className="notice-banner no-print">
+          {upcoming.map((u) => (
+            <div key={u.date}>
+              📌 {formatKoreanDate(u.date)}은(는) <strong>{u.day}요일 시간표</strong>로 진행합니다
+              {u.note ? ` (${u.note})` : ''}
+            </div>
+          ))}
+        </div>
+      )}
+
       {tab === 'admin' && <AdminPanel auth={auth} timetable={timetable} />}
 
       {tab === 'log' && <WeeklyLog />}
 
       {tab === 'classWeek' &&
         (timetable.parsed ? (
-          <ClassWeeklyView classMap={timetable.classMap} />
+          <ClassWeeklyView classMap={timetable.classMap} overrides={dayOverrides} />
         ) : (
           <p className="hint">시간표를 먼저 등록해주세요.</p>
         ))}
@@ -297,6 +312,7 @@ function App() {
                   teacherName={selectedTeacher}
                   origin={origin}
                   candidate={candidate}
+                  overrides={dayOverrides}
                   onConfirm={handleConfirmSwapRow}
                   onCancel={() => setCandidate(null)}
                 />
@@ -306,6 +322,7 @@ function App() {
                   teacherName={selectedTeacher}
                   origin={origin}
                   candidate={candidate}
+                  overrides={dayOverrides}
                   onConfirm={handleConfirmCoverRow}
                   onCancel={() => setCandidate(null)}
                 />

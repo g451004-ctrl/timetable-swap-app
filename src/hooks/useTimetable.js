@@ -46,6 +46,11 @@ export function useTimetable() {
       if (!parsedData.teachers.length) {
         throw new Error('시간표에서 교사 데이터를 찾지 못했습니다. 파일 형식을 확인해주세요.')
       }
+      // 시간표 파일을 새로 올려도 이미 등록해 둔 요일 변경은 유지한다
+      const { data: current } = await withTimeout(
+        supabase.from('timetables').select('data').eq('id', 1).maybeSingle()
+      )
+      if (current?.data?.dayOverrides) parsedData.dayOverrides = current.data.dayOverrides
       const { error: err } = await withTimeout(
         supabase
           .from('timetables')
@@ -80,7 +85,37 @@ export function useTimetable() {
     }
   }, [])
 
+  // 요일 변경 목록 저장. 다른 데이터(교사 이름 수정 등)를 덮어쓰지 않도록 최신 데이터를 다시 읽어 합친다.
+  const saveDayOverrides = useCallback(async (overrides) => {
+    setError('')
+    try {
+      const { data: current, error: readErr } = await withTimeout(
+        supabase.from('timetables').select('data').eq('id', 1).maybeSingle()
+      )
+      if (readErr || !current) throw new Error(readErr?.message || '등록된 시간표가 없습니다.')
+      const next = { ...current.data, dayOverrides: overrides }
+      const { error: err } = await withTimeout(supabase.from('timetables').update({ data: next }).eq('id', 1))
+      if (err) throw new Error(err.message)
+      setParsed(next)
+      return { ok: true }
+    } catch (e) {
+      setError('요일 변경을 저장하지 못했습니다: ' + e.message)
+      return { ok: false }
+    }
+  }, [])
+
   const classMap = useMemo(() => (parsed ? buildClassView(parsed) : null), [parsed])
 
-  return { parsed, classMap, meta, loading, error, uploading, uploadTimetable, deleteTimetable, refetch: fetchTimetable }
+  return {
+    parsed,
+    classMap,
+    meta,
+    loading,
+    error,
+    uploading,
+    uploadTimetable,
+    deleteTimetable,
+    saveDayOverrides,
+    refetch: fetchTimetable,
+  }
 }

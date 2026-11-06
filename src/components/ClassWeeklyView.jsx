@@ -1,10 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DAYS, PERIODS_BY_DAY, sortedClassNames } from '../lib/parseTimetable'
+import { PERIODS_BY_DAY, sortedClassNames } from '../lib/parseTimetable'
 import { buildEffectiveClassWeek } from '../lib/classWeekView'
 import { fetchClassSwapsForWeek } from '../lib/swapLog'
 import { weekRangeContaining, shiftWeek, todayInputDate, formatKoreanDate } from '../lib/dateUtils'
 
-export default function ClassWeeklyView({ classMap }) {
+// 열 머리글: 요일 + 날짜, 요일 변경이 있으면 어떤 요일 시간표인지 표시
+export function ColumnHeader({ col }) {
+  return (
+    <th className={col.overridden ? 'col-overridden' : ''}>
+      {col.day}
+      <span className="col-date">{col.date.slice(5).replace('-', '/')}</span>
+      {col.overridden && <span className="col-override">{col.templateDay}요일 시간표</span>}
+    </th>
+  )
+}
+
+export default function ClassWeeklyView({ classMap, overrides }) {
   const classNames = useMemo(() => sortedClassNames(classMap), [classMap])
   const [selectedClass, setSelectedClass] = useState(classNames[0] || '')
   const [anchor, setAnchor] = useState(todayInputDate())
@@ -34,10 +45,10 @@ export default function ClassWeeklyView({ classMap }) {
     }
   }, [selectedClass, start, end])
 
-  const grid = useMemo(() => {
+  const week = useMemo(() => {
     if (!selectedClass || !classMap[selectedClass]) return null
-    return buildEffectiveClassWeek(classMap[selectedClass], DAYS, swaps)
-  }, [classMap, selectedClass, swaps])
+    return buildEffectiveClassWeek(classMap[selectedClass], start, overrides, swaps)
+  }, [classMap, selectedClass, start, overrides, swaps])
 
   const maxPeriods = Math.max(...Object.values(PERIODS_BY_DAY))
 
@@ -59,7 +70,7 @@ export default function ClassWeeklyView({ classMap }) {
         <button className="link-btn" onClick={() => setAnchor(todayInputDate())}>
           이번 주로
         </button>
-        {grid && (
+        {week && (
           <button className="primary" onClick={() => window.print()}>
             🖨 인쇄 (게시용)
           </button>
@@ -71,7 +82,7 @@ export default function ClassWeeklyView({ classMap }) {
       ) : error ? (
         <p className="error">{error}</p>
       ) : (
-        grid && (
+        week && (
           <div className="print-area">
             <h2 className="print-title">
               {selectedClass}반 시간표 ({formatKoreanDate(start)} ~ {formatKoreanDate(end)})
@@ -81,8 +92,8 @@ export default function ClassWeeklyView({ classMap }) {
                 <thead>
                   <tr>
                     <th></th>
-                    {DAYS.map((d) => (
-                      <th key={d}>{d}</th>
+                    {week.columns.map((col) => (
+                      <ColumnHeader key={col.day} col={col} />
                     ))}
                   </tr>
                 </thead>
@@ -90,14 +101,14 @@ export default function ClassWeeklyView({ classMap }) {
                   {Array.from({ length: maxPeriods }).map((_, pIdx) => (
                     <tr key={pIdx}>
                       <th>{pIdx + 1}</th>
-                      {DAYS.map((day) => {
-                        if (pIdx >= PERIODS_BY_DAY[day]) return <td key={day} className="empty-slot" />
-                        const cell = grid[day][pIdx]
+                      {week.columns.map((col) => {
+                        if (pIdx >= col.periods) return <td key={col.day} className="empty-slot" />
+                        const cell = week.grid[col.day][pIdx]
                         const cls = ['cell', cell ? '' : 'blank', cell?.changed ? 'changed' : '']
                           .filter(Boolean)
                           .join(' ')
                         return (
-                          <td key={day} className={cls}>
+                          <td key={col.day} className={cls}>
                             {cell ? (
                               <>
                                 <div className="subj">{cell.subject}</div>
@@ -125,7 +136,7 @@ export default function ClassWeeklyView({ classMap }) {
           </div>
         )
       )}
-      {grid && (
+      {week && (
         <div className="legend no-print">
           <span className="legend-item">
             <i className="swatch changed" /> 이번 주 교체/대강으로 바뀐 수업

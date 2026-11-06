@@ -1,7 +1,30 @@
 import { useEffect, useState } from 'react'
-import { nextDateForDay } from '../lib/dateUtils'
+import { effectiveDay, formatKoreanDate, nextDateForTemplateDay } from '../lib/dateUtils'
 
 const REASON_OPTIONS = ['출장', '연수', '연가', '병가', '조퇴', '경조사', '기타']
+
+// 선택한 날짜가 그 수업(요일 시간표)과 맞는지 알려준다. 요일 변경이 걸린 날이면 그 사실도 안내한다.
+function DayDateNote({ label, date, day, overrides }) {
+  if (!date) return null
+  const eff = effectiveDay(date, overrides)
+  const changed = overrides?.[date]
+  if (eff !== day) {
+    return (
+      <p className="warn">
+        ⚠ {label} {formatKoreanDate(date)}은(는) {eff ? `${eff}요일 시간표로 진행하는 날` : '주말'}입니다. 선택한 수업은{' '}
+        {day}요일 시간표 기준이라 그 날짜에는 없는 수업일 수 있어요.
+      </p>
+    )
+  }
+  if (changed) {
+    return (
+      <p className="hint">
+        📌 {label} {formatKoreanDate(date)}은(는) {changed.day}요일 시간표로 진행하는 날입니다.
+      </p>
+    )
+  }
+  return null
+}
 
 function isSameCandidate(a, b) {
   return !!a && !!b && a.teacher === b.teacher && a.day === b.day && a.period === b.period
@@ -109,13 +132,13 @@ export function CoverCandidateList({ origin, candidates, onSelect, onPreview, ac
   )
 }
 
-export function SwapConfirm({ teacherName, origin, candidate, onConfirm, onCancel }) {
-  const [fromDate, setFromDate] = useState(() => nextDateForDay(origin.day))
-  const [toDate, setToDate] = useState(() => nextDateForDay(candidate.day))
+export function SwapConfirm({ teacherName, origin, candidate, overrides, onConfirm, onCancel }) {
+  const [fromDate, setFromDate] = useState(() => nextDateForTemplateDay(origin.day, overrides))
+  const [toDate, setToDate] = useState(() => nextDateForTemplateDay(candidate.day, overrides))
   const [onOffline, setOnOffline] = useState('오프라인')
 
-  useEffect(() => setFromDate(nextDateForDay(origin.day)), [origin.day])
-  useEffect(() => setToDate(nextDateForDay(candidate.day)), [candidate.day])
+  useEffect(() => setFromDate(nextDateForTemplateDay(origin.day, overrides)), [origin.day, overrides])
+  useEffect(() => setToDate(nextDateForTemplateDay(candidate.day, overrides)), [candidate.day, overrides])
 
   return (
     <div className="confirm-box">
@@ -154,6 +177,8 @@ export function SwapConfirm({ teacherName, origin, candidate, onConfirm, onCance
           </tr>
         </tbody>
       </table>
+      <DayDateNote label="결강 날짜" date={fromDate} day={origin.day} overrides={overrides} />
+      <DayDateNote label="교체 날짜" date={toDate} day={candidate.day} overrides={overrides} />
       {candidate.forced && (
         <p className="warn">⚠ 직접 입력한 교체입니다. 공강 시간 등은 직접 확인해주세요.</p>
       )}
@@ -182,12 +207,12 @@ export function SwapConfirm({ teacherName, origin, candidate, onConfirm, onCance
   )
 }
 
-export function CoverConfirm({ teacherName, origin, candidate, onConfirm, onCancel }) {
-  const [fromDate, setFromDate] = useState(() => nextDateForDay(origin.day))
+export function CoverConfirm({ teacherName, origin, candidate, overrides, onConfirm, onCancel }) {
+  const [fromDate, setFromDate] = useState(() => nextDateForTemplateDay(origin.day, overrides))
   const [onOffline, setOnOffline] = useState('오프라인')
   const [coverPlan, setCoverPlan] = useState('')
 
-  useEffect(() => setFromDate(nextDateForDay(origin.day)), [origin.day])
+  useEffect(() => setFromDate(nextDateForTemplateDay(origin.day, overrides)), [origin.day, overrides])
 
   return (
     <div className="confirm-box">
@@ -224,6 +249,7 @@ export function CoverConfirm({ teacherName, origin, candidate, onConfirm, onCanc
           </tr>
         </tbody>
       </table>
+      <DayDateNote label="결강 날짜" date={fromDate} day={origin.day} overrides={overrides} />
       {candidate.forced && (
         <p className="warn">⚠ 직접 입력한 대강입니다. 공강 시간 등은 직접 확인해주세요.</p>
       )}

@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import WeeklyLog from './WeeklyLog'
+import DayOverrideAdmin from './DayOverrideAdmin'
+import { getDayOverrides } from '../lib/dayOverrides'
 
 function AdminLoginForm({ onLogin, loading, error }) {
   const [pw, setPw] = useState('')
@@ -105,6 +107,12 @@ export default function AdminPanel({ auth, timetable }) {
       )}
 
       {timetable.error && <p className="error">{timetable.error}</p>}
+
+      <DayOverrideAdmin
+        overrides={getDayOverrides(timetable.parsed)}
+        onSave={timetable.saveDayOverrides}
+        disabled={!timetable.parsed}
+      />
 
       <div style={{ marginTop: 32 }}>
         <h2>선생님들이 등록한 교체/대강 내역</h2>

@@ -230,6 +230,34 @@ body {
   border: 1px solid #d98;
 }
 
+.notice-banner {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #fff8e1;
+  border: 1px solid #f0d58c;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #7a5a00;
+}
+
+.class-grid th .col-date {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #666;
+}
+
+.class-grid th .col-override {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #a15c00;
+}
+
+.class-grid th.col-overridden {
+  background: #fff3cd;
+}
+
 .forced-box {
   margin-top: 12px;
   padding: 10px 14px;

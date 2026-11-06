@@ -38,6 +38,36 @@ export function shiftWeek(dateStr, weeks) {
   return toInputDate(d)
 }
 
+export function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + n)
+  return toInputDate(d)
+}
+
+const WEEKDAY_NAMES = ['월', '화', '수', '목', '금']
+
+// 날짜의 실제 요일(월~금). 토/일이면 null
+export function weekdayOf(dateStr) {
+  const dow = new Date(dateStr + 'T00:00:00').getDay() // 0=일 .. 6=토
+  return dow >= 1 && dow <= 5 ? WEEKDAY_NAMES[dow - 1] : null
+}
+
+// 그 날 실제로 적용되는 시간표의 요일. 요일 변경(예: 월요일에 금요일 시간표로 진행)이 있으면 그 요일.
+// overrides: { 'YYYY-MM-DD': { day: '금', note: '' } }
+export function effectiveDay(dateStr, overrides) {
+  return overrides?.[dateStr]?.day || weekdayOf(dateStr)
+}
+
+// 오늘부터 가장 가까운, "day 요일 시간표"로 진행되는 날짜 (요일 변경 날짜 포함)
+export function nextDateForTemplateDay(day, overrides, fromDate = new Date()) {
+  const start = toInputDate(new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate()))
+  for (let i = 0; i < 35; i += 1) {
+    const date = addDays(start, i)
+    if (effectiveDay(date, overrides) === day) return date
+  }
+  return nextDateForDay(day, fromDate)
+}
+
 // 주어진 날짜들이 걸쳐 있는 주를 구한다. { anchor: 첫 주 월요일, weeks: 걸친 주 수(최대 3) }
 export function weekSpan(dateStrs) {
   const sorted = dateStrs.filter(Boolean).sort()
